@@ -1,38 +1,67 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Category } from 'src/app/interfaces/Category';
 import { Product } from 'src/app/interfaces/Product';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-product',
   templateUrl: './product.component.html',
   styleUrls: ['./product.component.css']
 })
-export class ProductComponent implements OnInit {
+export class ProductComponent implements OnInit, OnChanges {
 
   @Input()
-  categories : Category [] = [];
+  categories: Category[] = [];
 
   @Input()
-  product ?: Product;
+  product: Product = {} as Product;
 
   @Output()
   saveEmitter = new EventEmitter();
-  
-  constructor() { }
+
+  formGroupProduct: FormGroup;
+
+  constructor(private formBuilder: FormBuilder) {
+    this.formGroupProduct = this.formBuilder.group({
+      id: { value: null, disabled: true },
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      description: ['', [Validators.required]],
+      category: ['', [Validators.required]],
+      price: ['', [Validators.required]],
+      newProduct: [''],
+      promotion: ['']
+    })
+  }
+
+  ngOnChanges(): void {
+    if (this.product.id) {
+      this.formGroupProduct.setValue(this.product);
+    }
+  }
+
+
 
   ngOnInit(): void {
   }
 
-  save(){
-    this.saveEmitter.emit(true);
+  save() {
+    if (this.formGroupProduct.valid) {
+      Object.assign(this.product, this.formGroupProduct.value);
+      this.saveEmitter.emit(true);
+    }
   }
 
-  cancel(){
+  cancel() {
     this.saveEmitter.emit(false);
   }
 
-  selectedCategory(category1: Category, category2 : Category){
+  selectedCategory(category1: Category, category2: Category) {
     return category1 && category2 ? category1.id === category2.id : false;
   }
+
+  get pfgName() { return this.formGroupProduct.get('name'); }
+  get pfgDescription() { return this.formGroupProduct.get('description'); }
+  get pfgCategory() { return this.formGroupProduct.get('category'); }
+  get pfgPrice() { return this.formGroupProduct.get('price'); }
 
 }
